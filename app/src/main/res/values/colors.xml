@@ -3,4 +3,12 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+
+    <color name="colorMaterialRed">#F44336</color>
+    <color name="colorMaterialPink">#E91E63</color>
+    <color name="colorMaterialPurple">#9C27B0</color>
+    <color name="colorMaterialDeepPurple">#673AB7</color>
+    <color name="colorMaterialIndigo">#3F51B5</color>
+    <color name="colorMaterialBlue">#2196F3</color>
+    <color name="colorMaterialTeal">#009688</color>
 </resources>

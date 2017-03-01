@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Happily</string>
+    <string-array name="happily_colors">
+        <item>@color/colorMaterialBlue</item>
+        <item>@color/colorMaterialDeepPurple</item>
+        <item>@color/colorMaterialIndigo</item>
+        <item>@color/colorMaterialPink</item>
+        <item>@color/colorMaterialPurple</item>
+        <item>@color/colorMaterialRed</item>
+        <item>@color/colorMaterialTeal</item>
+    </string-array>
 </resources>

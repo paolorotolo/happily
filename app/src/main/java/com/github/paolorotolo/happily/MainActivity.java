@@ -4,9 +4,11 @@ import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Handler;
 import android.support.v4.graphics.ColorUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.RelativeLayout;
 
 import com.google.android.gms.vision.CameraSource;
@@ -16,21 +18,37 @@ import com.google.android.gms.vision.face.FaceDetector;
 import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 
 import java.io.IOException;
+import java.util.Random;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
     private CameraSource mCameraSource;
     private int backgroundColor;
-    RelativeLayout background;
+    private RelativeLayout background;
 
-    private int colorSaturation = 0;
+    private int colorAlpha = 0;
+
+    private int mInterval = 500;
+    private Handler mHandler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         background = (RelativeLayout) findViewById(R.id.background);
+        int[] backgroundColors = new int[]{
+                HappilyColors.MATERIAL_BLUE,
+                HappilyColors.MATERIAL_DEEP_PURPLE,
+                HappilyColors.MATERIAL_INDIGO,
+                HappilyColors.MATERIAL_PINK,
+                HappilyColors.MATERIAL_PURPLE,
+                HappilyColors.MATERIAL_BLUE,
+                HappilyColors.MATERIAL_RED,
+                HappilyColors.MATERIAL_TEAL
+        };
 
-        backgroundColor = Color.RED;
+        backgroundColor = backgroundColors[new Random().nextInt(backgroundColors.length)];
         FaceDetector detector = new FaceDetector.Builder(getApplicationContext())
                 .setTrackingEnabled(true)
                 .setProminentFaceOnly(true)
@@ -49,7 +67,8 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        changeBackgroundColor();
+        mHandler = new Handler();
+        startRepeatingTask();
     }
 
 
@@ -71,8 +90,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     private class FaceTracker extends Tracker<Face> {
-        int backgroundColorPrevious = Color.RED;
-
         @Override
         public void onUpdate(FaceDetector.Detections<Face> detectionResults, final Face face){
             if (face.getIsSmilingProbability() != -1) {
@@ -80,7 +97,11 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         float alpha = face.getIsSmilingProbability()*255;
-                        colorSaturation = (int) alpha;
+                        alpha = alpha + 70;
+                        if (alpha > 255) {
+                            alpha = 255;
+                        }
+                        colorAlpha = (int) alpha;
                     }
                 });
 
@@ -88,38 +109,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private int previousColor = Color.RED;
+    private int previousColor = backgroundColor;
 
-    private void changeBackgroundColor(){
-        new Thread() {
-            int hue = 0 ;
-            int saturation = 200;
-            int value = 120; //adjust as per your need
-
-            public void run() {
-                for ( hue = 0; hue < 255; hue++) {
-                    try {
-                        sleep(500);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                //Now form a hsv float array from the 3 variables
-                                float[] hsv = {hue , saturation, value};
-
-                                //make color from that float array
-                                int cl = Color.HSVToColor(hsv);
-
-                                changeBackground(previousColor, ColorUtils.setAlphaComponent(cl, colorSaturation));
-                                previousColor = ColorUtils.setAlphaComponent(cl, colorSaturation);
-                            }
-                        });
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
+    Runnable mStatusChecker = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                // set to coloralpha
+                Log.e("happily", "Setting alpha to "+ colorAlpha);
+                int newColor = ColorUtils.setAlphaComponent(backgroundColor, colorAlpha);
+                changeBackground(previousColor, newColor);
+                previousColor = newColor;
+            } finally {
+                // 100% guarantee that this always happens, even if
+                // your update method throws an exception
+                mHandler.postDelayed(mStatusChecker, mInterval);
             }
-        }.start();
-    }
+        }
+    };
 
     private void changeBackground(int colorFrom, int colorTo) {
         ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), colorFrom, colorTo);
@@ -133,5 +140,19 @@ public class MainActivity extends AppCompatActivity {
 
         });
         colorAnimation.start();
+    }
+
+    void startRepeatingTask() {
+        mStatusChecker.run();
+    }
+
+    void stopRepeatingTask() {
+        mHandler.removeCallbacks(mStatusChecker);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        stopRepeatingTask();
     }
 }
