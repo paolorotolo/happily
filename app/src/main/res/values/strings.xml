@@ -9,4 +9,6 @@
         <item>@color/colorMaterialRed</item>
         <item>@color/colorMaterialTeal</item>
     </string-array>
+    <string name="title_activity_quote">QuoteActivity</string>
+    <string name="action_settings">Settings</string>
 </resources>

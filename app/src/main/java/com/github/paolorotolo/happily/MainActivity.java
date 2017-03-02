@@ -1,15 +1,19 @@
 package com.github.paolorotolo.happily;
 
+import android.Manifest;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
-import android.graphics.Color;
+import android.content.pm.PackageManager;
 import android.os.Handler;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.graphics.ColorUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Tracker;
@@ -19,9 +23,9 @@ import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 
 import java.io.IOException;
 import java.util.Random;
-import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
+    private static final int PERMISSIONS_REQUEST_CAMERA = 01;
     private CameraSource mCameraSource;
     private int backgroundColor;
     private RelativeLayout background;
@@ -62,13 +66,25 @@ public class MainActivity extends AppCompatActivity {
 
         createCameraSource(detector);
         try {
-            mCameraSource.start();
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        Manifest.permission.READ_CONTACTS)) {
+                    Snackbar.make((RelativeLayout) findViewById(R.id.main_layout), "We need camera permission to detect your smile :)", Snackbar.LENGTH_LONG);
+                } else {
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.CAMERA},
+                            PERMISSIONS_REQUEST_CAMERA);
+                }
+            } else {
+                mCameraSource.start();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         mHandler = new Handler();
         startRepeatingTask();
+        new GetHappyQuote(this).execute();
     }
 
 
@@ -89,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+
     private class FaceTracker extends Tracker<Face> {
         @Override
         public void onUpdate(FaceDetector.Detections<Face> detectionResults, final Face face){
@@ -104,7 +121,6 @@ public class MainActivity extends AppCompatActivity {
                         colorAlpha = (int) alpha;
                     }
                 });
-
             }
         }
     }
@@ -148,6 +164,23 @@ public class MainActivity extends AppCompatActivity {
 
     void stopRepeatingTask() {
         mHandler.removeCallbacks(mStatusChecker);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSIONS_REQUEST_CAMERA: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    mCameraSource.start();
+                } else {
+                    Toast.makeText(getApplicationContext(), "You can't use Happily without camera. Please restart the app and allow camera permission.", Toast.LENGTH_LONG);
+                    this.finish();
+                }
+                return;
+            }
+        }
     }
 
     @Override
