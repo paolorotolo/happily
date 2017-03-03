@@ -2,6 +2,8 @@ package com.github.paolorotolo.happily;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,15 +39,17 @@ public class GetHappyQuote extends AsyncTask<String, String, String> {
             HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
 
             messageArray = parseJson(convertStreamToString(httpURLConnection.getInputStream())).toString();
+            Log.e("happy", "API request returning " + messageArray);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
         return messageArray;
     }
 
-    private JSONArray parseJson(String s) throws JSONException {
+    private String parseJson(String s) throws JSONException {
         JSONObject json = new JSONObject(s);
-        return json.getJSONArray("quote");
+        return json.getString("quote");
     }
 
     protected void onProgressUpdate(String... progress) {

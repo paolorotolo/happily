@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements GetHappyQuote.Asy
                     Snackbar.make((RelativeLayout) findViewById(R.id.activity_main_relative_main), "We need camera permission to detect your smile :)", Snackbar.LENGTH_LONG);
                 } else {
                     ActivityCompat.requestPermissions(this,
-                            new String[]{Manifest.permission.CAMERA},
+                            new String[]{Manifest.permission.CAMERA, Manifest.permission.INTERNET},
                             PERMISSIONS_REQUEST_CAMERA);
                 }
             } else {
@@ -188,6 +188,7 @@ public class MainActivity extends AppCompatActivity implements GetHappyQuote.Asy
                 } else {
                     Toast.makeText(getApplicationContext(), "You can't use Happily without camera. Please restart the app and allow camera permission.", Toast.LENGTH_LONG);
                     this.finish();
+
                 }
                 return;
             }
