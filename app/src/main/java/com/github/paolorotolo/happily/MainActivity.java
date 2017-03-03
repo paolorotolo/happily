@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.vision.CameraSource;
@@ -24,7 +25,7 @@ import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 import java.io.IOException;
 import java.util.Random;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements GetHappyQuote.AsyncResponse  {
     private static final int PERMISSIONS_REQUEST_CAMERA = 01;
     private CameraSource mCameraSource;
     private int backgroundColor;
@@ -40,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        background = (RelativeLayout) findViewById(R.id.background);
+        background = (RelativeLayout) findViewById(R.id.activity_main_relative_background);
         int[] backgroundColors = new int[]{
                 HappilyColors.MATERIAL_BLUE,
                 HappilyColors.MATERIAL_DEEP_PURPLE,
@@ -69,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                         Manifest.permission.READ_CONTACTS)) {
-                    Snackbar.make((RelativeLayout) findViewById(R.id.main_layout), "We need camera permission to detect your smile :)", Snackbar.LENGTH_LONG);
+                    Snackbar.make((RelativeLayout) findViewById(R.id.activity_main_relative_main), "We need camera permission to detect your smile :)", Snackbar.LENGTH_LONG);
                 } else {
                     ActivityCompat.requestPermissions(this,
                             new String[]{Manifest.permission.CAMERA},
@@ -104,6 +105,12 @@ public class MainActivity extends AppCompatActivity {
                 .build();
     }
 
+    @Override
+    public void processFinish(String output) {
+        // onFinish here
+        TextView quoteTextView = (TextView) findViewById(R.id.activity_main_textview_quote);
+        quoteTextView.setText(output);
+    }
 
 
     private class FaceTracker extends Tracker<Face> {
@@ -173,7 +180,11 @@ public class MainActivity extends AppCompatActivity {
             case PERMISSIONS_REQUEST_CAMERA: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    mCameraSource.start();
+                    try {
+                        mCameraSource.start();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     Toast.makeText(getApplicationContext(), "You can't use Happily without camera. Please restart the app and allow camera permission.", Toast.LENGTH_LONG);
                     this.finish();

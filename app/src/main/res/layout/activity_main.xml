@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main_layout"
+    android:id="@+id/activity_main_relative_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000"
@@ -9,11 +9,11 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/background"
+        android:id="@+id/activity_main_relative_background"
         android:background="@color/colorAccent">
         <android.support.v7.widget.CardView
             xmlns:card_view="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/quote_cardview"
+            android:id="@+id/activity_main_cardview_quote"
             android:layout_gravity="center"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -21,7 +21,7 @@
             android:layout_centerVertical="true"
             card_view:cardCornerRadius="4dp">
             <TextView
-                android:id="@+id/quote_textview"
+                android:id="@+id/activity_main_textview_quote"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:padding="32dp"
@@ -31,5 +31,15 @@
                 android:textColor="#222222"
                 android:text="Getting your daily happy quote..."/>
         </android.support.v7.widget.CardView>
+        <TextView
+            android:id="@+id/activity_main_start_tip"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Smile to start :)"
+            android:layout_alignParentBottom="true"
+            android:textAlignment="center"
+            android:paddingBottom="64dp"
+            android:textColor="#ffffff"
+            android:textSize="24sp"/>
     </RelativeLayout>
 </RelativeLayout>
