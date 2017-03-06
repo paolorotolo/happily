@@ -4,14 +4,17 @@ import android.Manifest;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.graphics.ColorUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,11 +28,19 @@ import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 import java.io.IOException;
 import java.util.Random;
 
+import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
+
 public class MainActivity extends AppCompatActivity implements GetHappyQuote.AsyncResponse  {
     private static final int PERMISSIONS_REQUEST_CAMERA = 01;
     private CameraSource mCameraSource;
     private int backgroundColor;
     private RelativeLayout background;
+    private TextView tipTextView;
+    private View quoteView;
+    private MaterialProgressBar progressBar;
+    private float smileProbability;
+    private FloatingActionButton shareFab;
+    private TextView quoteTextView;
 
     private int colorAlpha = 0;
 
@@ -42,6 +53,18 @@ public class MainActivity extends AppCompatActivity implements GetHappyQuote.Asy
         setContentView(R.layout.activity_main);
 
         background = (RelativeLayout) findViewById(R.id.activity_main_relative_background);
+        quoteView = findViewById(R.id.activity_main_cardview_quote);
+        tipTextView = (TextView) findViewById(R.id.activity_main_start_tip);
+        progressBar = (MaterialProgressBar) findViewById(R.id.activity_main_progress_bar);
+        shareFab = (FloatingActionButton) findViewById(R.id.activity_main_fab_share);
+        
+        shareFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                shareQuote();
+            }
+        });
+
         int[] backgroundColors = new int[]{
                 HappilyColors.MATERIAL_BLUE,
                 HappilyColors.MATERIAL_DEEP_PURPLE,
@@ -88,6 +111,14 @@ public class MainActivity extends AppCompatActivity implements GetHappyQuote.Asy
         new GetHappyQuote(this).execute();
     }
 
+    private void shareQuote() {
+        Intent shareIntent = new Intent();
+        shareIntent.setAction(Intent.ACTION_SEND);
+        shareIntent.putExtra(Intent.EXTRA_TEXT, quoteTextView.getText() + " #happily");
+        shareIntent.setType("text/plain");
+        startActivity(shareIntent);
+    }
+
 
     //==============================================================================================
     // Camera Source
@@ -108,7 +139,7 @@ public class MainActivity extends AppCompatActivity implements GetHappyQuote.Asy
     @Override
     public void processFinish(String output) {
         // onFinish here
-        TextView quoteTextView = (TextView) findViewById(R.id.activity_main_textview_quote);
+        quoteTextView = (TextView) findViewById(R.id.activity_main_textview_quote);
         quoteTextView.setText(output);
     }
 
@@ -116,20 +147,26 @@ public class MainActivity extends AppCompatActivity implements GetHappyQuote.Asy
     private class FaceTracker extends Tracker<Face> {
         @Override
         public void onUpdate(FaceDetector.Detections<Face> detectionResults, final Face face){
-            if (face.getIsSmilingProbability() != -1) {
+            smileProbability = face.getIsSmilingProbability();
+            if (smileProbability != -1) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        float alpha = face.getIsSmilingProbability()*255;
-                        alpha = alpha + 70;
-                        if (alpha > 255) {
-                            alpha = 255;
-                        }
-                        colorAlpha = (int) alpha;
+                        setColorAlpha(smileProbability*255);
                     }
                 });
+            } else {
+                setColorAlpha(0);
             }
         }
+    }
+
+    private void setColorAlpha(float alpha){
+        alpha = alpha + 70;
+        if (alpha > 255) {
+            alpha = 255;
+        }
+        colorAlpha = (int) alpha;
     }
 
     private int previousColor = backgroundColor;
@@ -137,19 +174,28 @@ public class MainActivity extends AppCompatActivity implements GetHappyQuote.Asy
     Runnable mStatusChecker = new Runnable() {
         @Override
         public void run() {
-            try {
-                // set to coloralpha
-                Log.e("happily", "Setting alpha to "+ colorAlpha);
-                int newColor = ColorUtils.setAlphaComponent(backgroundColor, colorAlpha);
-                changeBackground(previousColor, newColor);
-                previousColor = newColor;
-            } finally {
-                // 100% guarantee that this always happens, even if
-                // your update method throws an exception
+            // set to coloralpha
+            Log.e("happily", "Setting alpha to "+ colorAlpha);
+            int newColor = ColorUtils.setAlphaComponent(backgroundColor, colorAlpha);
+            changeBackground(previousColor, newColor);
+            previousColor = newColor;
+            if (smileProbability>0.8){
+                progressBar.setProgress(progressBar.getProgress() + 8);
+            }
+            if (progressBar.getProgress() == 100) {
+                showQuote();
+            } else {
                 mHandler.postDelayed(mStatusChecker, mInterval);
             }
         }
     };
+
+    private void showQuote() {
+        AnimationTools.startCircularReveal(quoteView);
+        AnimationTools.startFadeOutAnimation(tipTextView);
+        AnimationTools.startFadeInAnimation(shareFab);
+        AnimationTools.startFadeOutAnimation(progressBar);
+    }
 
     private void changeBackground(int colorFrom, int colorTo) {
         ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), colorFrom, colorTo);
