@@ -15,7 +15,7 @@
             android:id="@+id/activity_main_start_tip"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Smile to get your daily happy quote :)"
+            android:text="Smile to get your\ndaily happy quote :)"
             android:layout_centerVertical="true"
             android:textStyle="bold"
             android:textAlignment="center"
