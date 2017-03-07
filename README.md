@@ -4,3 +4,4 @@ Happily is a simple Android experiment that uses Google's Mobile Vision API to d
 
 If yes, it animates the background and loads an happy quote.
 
+Download APK [here](https://github.com/paolorotolo/happily/releases/download/v1.0/app-release.apk).
