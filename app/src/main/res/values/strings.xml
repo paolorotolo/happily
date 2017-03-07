@@ -9,6 +9,10 @@
         <item>@color/colorMaterialRed</item>
         <item>@color/colorMaterialTeal</item>
     </string-array>
-    <string name="title_activity_quote">QuoteActivity</string>
-    <string name="action_settings">Settings</string>
+    <string name="activity_main_info_message">Happily is a simple Android experiment that uses Google\'s Mobile Vision API to detect if the user is smiling.\nIf yes, it changes background and loads a quote from happyapi.co.\n\nExternal libraries used:\n- MaterialProgressBar by Zhang Hai shared under Apache 2.0.\n\nExperiment by Paolo Rotolo. Full source code is available on my GitHub.\nhttps://github.com/paolorotolo</string>
+    <string name="activity_main_info_title">About Happily</string>
+    <string name="activity_main_start_tip">Smile to get your\ndaily happy quote :)</string>
+    <string name="activity_main_quote_loading">Getting your daily happy quote...</string>
+    <string name="activity_main_permission_camera">We need camera permission to detect your smile :)</string>
+    <string name="activity_main_permission_denied">You can\'t use Happily without camera. Please restart the app and allow camera permission.</string>
 </resources>

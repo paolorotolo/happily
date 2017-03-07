@@ -4,17 +4,20 @@ import android.Manifest;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.graphics.ColorUtils;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,8 +33,8 @@ import java.util.Random;
 
 import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
 
-public class MainActivity extends AppCompatActivity implements GetHappyQuote.AsyncResponse  {
-    private static final int PERMISSIONS_REQUEST_CAMERA = 01;
+public class MainActivity extends AppCompatActivity implements GetHappyQuote.AsyncResponse {
+    private static final int PERMISSIONS_REQUEST_CAMERA = 1;
     private CameraSource mCameraSource;
     private int backgroundColor;
     private RelativeLayout background;
@@ -41,11 +44,31 @@ public class MainActivity extends AppCompatActivity implements GetHappyQuote.Asy
     private float smileProbability;
     private FloatingActionButton shareFab;
     private TextView quoteTextView;
+    private ImageView infoImageView;
 
     private int colorAlpha = 0;
 
     private int mInterval = 500;
     private Handler mHandler;
+    private int previousColor = backgroundColor;
+    Runnable mStatusChecker = new Runnable() {
+        @Override
+        public void run() {
+            // set to coloralpha
+            Log.e("happily", "Setting alpha to " + colorAlpha);
+            int newColor = ColorUtils.setAlphaComponent(backgroundColor, colorAlpha);
+            changeBackground(previousColor, newColor);
+            previousColor = newColor;
+            if (smileProbability > 0.8) {
+                progressBar.setProgress(progressBar.getProgress() + 8);
+            }
+            if (progressBar.getProgress() == 100) {
+                showQuote();
+            } else {
+                mHandler.postDelayed(mStatusChecker, mInterval);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +80,15 @@ public class MainActivity extends AppCompatActivity implements GetHappyQuote.Asy
         tipTextView = (TextView) findViewById(R.id.activity_main_start_tip);
         progressBar = (MaterialProgressBar) findViewById(R.id.activity_main_progress_bar);
         shareFab = (FloatingActionButton) findViewById(R.id.activity_main_fab_share);
-        
+        infoImageView = (ImageView) findViewById(R.id.activity_main_info);
+
+        infoImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showInfoDialog();
+            }
+        });
+
         shareFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -93,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements GetHappyQuote.Asy
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                         Manifest.permission.READ_CONTACTS)) {
-                    Snackbar.make((RelativeLayout) findViewById(R.id.activity_main_relative_main), "We need camera permission to detect your smile :)", Snackbar.LENGTH_LONG);
+                    Snackbar.make((RelativeLayout) findViewById(R.id.activity_main_relative_main), R.string.activity_main_permission_camera, Snackbar.LENGTH_LONG);
                 } else {
                     ActivityCompat.requestPermissions(this,
                             new String[]{Manifest.permission.CAMERA, Manifest.permission.INTERNET},
@@ -111,6 +142,24 @@ public class MainActivity extends AppCompatActivity implements GetHappyQuote.Asy
         new GetHappyQuote(this).execute();
     }
 
+
+    //==============================================================================================
+    // Camera Source
+    //==============================================================================================
+
+    private void showInfoDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.activity_main_info_title)
+                .setMessage(R.string.activity_main_info_message)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int i) {
+                        dialog.dismiss();
+                    }
+                })
+                .show();
+    }
+
     private void shareQuote() {
         Intent shareIntent = new Intent();
         shareIntent.setAction(Intent.ACTION_SEND);
@@ -118,11 +167,6 @@ public class MainActivity extends AppCompatActivity implements GetHappyQuote.Asy
         shareIntent.setType("text/plain");
         startActivity(shareIntent);
     }
-
-
-    //==============================================================================================
-    // Camera Source
-    //==============================================================================================
 
     /**
      * Creates the face detector and the camera.
@@ -143,52 +187,13 @@ public class MainActivity extends AppCompatActivity implements GetHappyQuote.Asy
         quoteTextView.setText(output);
     }
 
-
-    private class FaceTracker extends Tracker<Face> {
-        @Override
-        public void onUpdate(FaceDetector.Detections<Face> detectionResults, final Face face){
-            smileProbability = face.getIsSmilingProbability();
-            if (smileProbability != -1) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        setColorAlpha(smileProbability*255);
-                    }
-                });
-            } else {
-                setColorAlpha(0);
-            }
-        }
-    }
-
-    private void setColorAlpha(float alpha){
+    private void setColorAlpha(float alpha) {
         alpha = alpha + 70;
         if (alpha > 255) {
             alpha = 255;
         }
         colorAlpha = (int) alpha;
     }
-
-    private int previousColor = backgroundColor;
-
-    Runnable mStatusChecker = new Runnable() {
-        @Override
-        public void run() {
-            // set to coloralpha
-            Log.e("happily", "Setting alpha to "+ colorAlpha);
-            int newColor = ColorUtils.setAlphaComponent(backgroundColor, colorAlpha);
-            changeBackground(previousColor, newColor);
-            previousColor = newColor;
-            if (smileProbability>0.8){
-                progressBar.setProgress(progressBar.getProgress() + 8);
-            }
-            if (progressBar.getProgress() == 100) {
-                showQuote();
-            } else {
-                mHandler.postDelayed(mStatusChecker, mInterval);
-            }
-        }
-    };
 
     private void showQuote() {
         AnimationTools.startCircularReveal(quoteView);
@@ -232,7 +237,7 @@ public class MainActivity extends AppCompatActivity implements GetHappyQuote.Asy
                         e.printStackTrace();
                     }
                 } else {
-                    Toast.makeText(getApplicationContext(), "You can't use Happily without camera. Please restart the app and allow camera permission.", Toast.LENGTH_LONG);
+                    Toast.makeText(getApplicationContext(), R.string.activity_main_permission_denied, Toast.LENGTH_LONG).show();
                     this.finish();
 
                 }
@@ -245,5 +250,22 @@ public class MainActivity extends AppCompatActivity implements GetHappyQuote.Asy
     public void onDestroy() {
         super.onDestroy();
         stopRepeatingTask();
+    }
+
+    private class FaceTracker extends Tracker<Face> {
+        @Override
+        public void onUpdate(FaceDetector.Detections<Face> detectionResults, final Face face) {
+            smileProbability = face.getIsSmilingProbability();
+            if (smileProbability != -1) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        setColorAlpha(smileProbability * 255);
+                    }
+                });
+            } else {
+                setColorAlpha(0);
+            }
+        }
     }
 }

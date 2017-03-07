@@ -4,9 +4,9 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,11 +19,7 @@ public class GetHappyQuote extends AsyncTask<String, String, String> {
     Context context;
     AsyncResponse delegate = null;
 
-    public interface AsyncResponse {
-        void processFinish(String output);
-    }
-
-    public GetHappyQuote(AsyncResponse delegate){
+    public GetHappyQuote(AsyncResponse delegate) {
         this.delegate = delegate;
     }
 
@@ -32,7 +28,7 @@ public class GetHappyQuote extends AsyncTask<String, String, String> {
     }
 
     @Override
-    protected String doInBackground(String... aurl){
+    protected String doInBackground(String... aurl) {
         String messageArray = null;
         try {
             URL url = new URL("http://happyapi.co/api/daily/");
@@ -79,6 +75,10 @@ public class GetHappyQuote extends AsyncTask<String, String, String> {
             }
         }
         return sb.toString();
+    }
+
+    public interface AsyncResponse {
+        void processFinish(String output);
     }
 }
 
